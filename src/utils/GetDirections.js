@@ -50,7 +50,7 @@ const getPositionToHome = (home, location) => {
 
   const radians = Math.atan2(x, y);
   const degree = (radians * 180) / Math.PI;
-  console.log(degree);
+
   if (degree >= -45 && degree < 45) {
     position = "North";
   } else if (degree < -45 && degree >= -135) {

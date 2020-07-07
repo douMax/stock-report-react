@@ -90,7 +90,7 @@ export const fastConvert = (file, setFunc) => {
           };
           stocksArray.push(tempObj);
         });
-
+        console.log(ordersArray);
         setFunc({ stocksArray, ordersArray });
       });
   };

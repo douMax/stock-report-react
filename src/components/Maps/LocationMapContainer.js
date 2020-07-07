@@ -3,7 +3,7 @@ import LocationMap from "./LocationMap";
 
 const LocationMapContainer = (props) => {
   return (
-    <div style={{ width: "100%", height: "70vh" }}>
+    <div>
       <LocationMap markers={props.markers} />
     </div>
   );
