@@ -1,11 +1,40 @@
 const csv = require("@fast-csv/parse");
-const fs = require("fs");
+const { getLocations } = require("./GetDirections");
+
+const buildOrderWithShipInfo = async (csvRow, postcode) => {
+  let suburb = csvRow["Shipping City"].trim(); // shipping city
+  suburb = suburb.toLowerCase();
+  suburb = suburb.charAt(0).toUpperCase() + suburb.substr(1);
+  let phone = csvRow["Shipping Phone"].trim();
+  if (phone[0] === "'") {
+    phone = phone.substr(1);
+  }
+  //35 - 42, 44 - notes
+  let streetAdd = csvRow["Shipping Street"].trim();
+  let customerName = csvRow["Shipping Name"].trim();
+  let stateName = "NSW";
+  let shipAddText = `${streetAdd} \n${suburb} ${postcode}`;
+  let location = await getLocations(shipAddText);
+  let position = location.position;
+
+  let orderObj = {
+    customerName,
+    phone,
+    shipAddText,
+    suburb,
+    postcode,
+    stateName,
+    location,
+    position,
+  };
+  return orderObj;
+};
 
 export const fastConvert = (file, setFunc) => {
   const reader = new FileReader();
   const stocksArray = [];
   const quantityByProduct = {};
-  const customersBySub = {};
+  const ordersArray = [];
 
   reader.onload = () => {
     const CSV_STRING = reader.result;
@@ -13,7 +42,7 @@ export const fastConvert = (file, setFunc) => {
     csv
       .parseString(CSV_STRING, { headers: true })
       .on("error", (error) => console.error(error))
-      .on("data", (row) => {
+      .on("data", async (row) => {
         let productName = row["Lineitem name"];
         let quantity = Number(row["Lineitem quantity"]);
         let orderNumber = row["Name"];
@@ -29,46 +58,22 @@ export const fastConvert = (file, setFunc) => {
           quantityByProduct[productName].orders = orderNumber;
         }
 
-        let customerName = row["Shipping Name"].trim();
-        // check if there is a customer
-        if (customerName && customerName.length > 0) {
-          let suburb = row["Shipping City"].trim(); // shipping city
-          suburb = suburb.toLowerCase();
-          suburb = suburb.charAt(0).toUpperCase() + suburb.substr(1);
-          let phone = row["Shipping Phone"].trim();
-          if (phone[0] === "'") {
-            phone = phone.substr(1);
-          }
-          //35 - 42, 44 - notes
-          let shipAdd1 = row["Shipping Address1"].trim();
-          let shipAdd2 = row["Shipping Address2"].trim();
-          let shipStreet = row["Shipping Street"].trim();
-          let shipZip = row["Shipping Zip"].trim();
-          if (shipZip[0] === "'") {
-            shipZip = shipZip.substr(1);
-          }
-          let shipState = "NSW";
+        let postcode = row["Shipping Zip"].trim();
+        // check if there is a postcode
 
-          let orderObj = {
-            orderNumber,
-            customerName,
-            phone,
-            shipStreet,
-            shipAdd1,
-            shipAdd2,
-            suburb,
-            shipZip,
-            shipState,
-          };
-
-          if (customersBySub[suburb] === undefined) {
-            customersBySub[suburb] = [];
+        if (postcode && postcode.length > 0) {
+          if (postcode[0] === "'") {
+            postcode = postcode.substr(1);
           }
 
-          customersBySub[suburb].push(orderObj);
+          let orderObj = await buildOrderWithShipInfo(row, postcode);
+
+          ordersArray.push({ ...orderObj, orderNumber });
         }
       })
       .on("end", (rowCount) => {
+        console.log(`Parsed ${rowCount} rows`);
+
         // sort output object by key name alphabetically
         const keys = Object.keys(quantityByProduct);
         const sortedKeys = keys.sort((a, b) => {
@@ -86,125 +91,11 @@ export const fastConvert = (file, setFunc) => {
           stocksArray.push(tempObj);
         });
 
-        setFunc({ stocksArray, customersBySub });
-        console.log(`Parsed ${rowCount} rows`);
+        setFunc({ stocksArray, ordersArray });
       });
   };
 
   reader.readAsText(file);
-};
-
-export const readCsvData = (file, setFunc) => {
-  const reader = new FileReader();
-  reader.onload = () => {
-    const data = reader.result;
-    const ordersGroupBySuburb = groupDataBySuburb(data);
-    const stockArray = convertDataToStockArray(data);
-    setFunc({ stockArray, ordersGroupBySuburb });
-  };
-
-  reader.readAsText(file);
-};
-
-const groupDataBySuburb = (data) => {
-  const result = {};
-  const lines = data.split("\n");
-
-  lines.forEach((line, index) => {
-    if (index > 0) {
-      let lineArr =
-        line.match(/(".*?"|[^\s",][^",]+[^\s",])(?=\s*,|\s*$)/g) || [];
-
-      let customerName = lineArr[34];
-      // check if there is a customer
-      if (customerName && customerName.length > 0) {
-        let orderNumber = lineArr[0];
-        let suburb = lineArr[39]; // shipping city
-        let phone = lineArr[43];
-
-        //35 - 42, 44 - notes
-        let shipAdd1 = lineArr[36];
-        let shipAdd2 = lineArr[37];
-        let shipCompany = lineArr[38];
-        let shipZip = lineArr[40];
-        let shipState = "NSW";
-
-        let orderObj = {
-          orderNumber,
-          customerName,
-          phone,
-          shipAdd1,
-          shipAdd2,
-          shipCompany,
-          shipZip,
-          shipState,
-        };
-        if (result[suburb] === undefined) {
-          result[suburb] = [];
-        }
-        result[suburb].push(orderObj);
-      }
-    }
-  });
-
-  return result;
-};
-
-const convertDataToStockArray = (data) => {
-  const outputArr = [];
-  const output = {};
-  const lines = data.split("\n");
-  const headerLine = lines[0].split(",");
-  console.log(
-    "Target columns: ",
-    headerLine,
-    headerLine[1],
-    headerLine[16],
-    headerLine[17]
-  );
-
-  lines.forEach((line, index) => {
-    if (index > 0) {
-      let lineArr =
-        line.match(/(".*?"|[^\s",][^",]+[^\s",])(?=\s*,|\s*$)/g) || [];
-
-      let productName = lineArr[17];
-      let quantity = Number(lineArr[16]);
-      let orderNumber = lineArr[0];
-
-      if (!productName) {
-        return;
-      }
-
-      if (output[productName]) {
-        output[productName].quantity += quantity;
-        output[productName].orders += ` | ${orderNumber}`;
-      } else {
-        output[productName] = { quantity: 0, orders: "" };
-        output[productName].quantity = quantity;
-        output[productName].orders = orderNumber;
-      }
-    }
-  });
-
-  // sort output object by key name alphabetically
-  const keys = Object.keys(output);
-  const sortedKeys = keys.sort((a, b) => {
-    return (a > b) - 0.5;
-  });
-
-  // flat the structure, conver output object to array for futhur csv export
-  sortedKeys.forEach((key) => {
-    let value = output[key];
-    let tempObj = {
-      product: key,
-      qty: value.quantity,
-      orders: value.orders,
-    };
-    outputArr.push(tempObj);
-  });
-
-  return outputArr;
 };
 
 export const exportToCsv = (arrayOfObjects, columns) => {

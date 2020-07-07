@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { Upload, message } from "antd";
-import { InboxOutlined } from "@ant-design/icons";
-const { Dragger } = Upload;
+import React, { useState } from "react";
+import { Upload, Button } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 
 const UploadToolBar = (props) => {
   const [fileList, setFileList] = useState();
@@ -13,22 +12,15 @@ const UploadToolBar = (props) => {
   };
 
   return (
-    <Dragger
+    <Upload
       fileList={fileList}
       onChange={onUploadChange}
       beforeUpload={beforeUpload}
     >
-      <p className="ant-upload-drag-icon">
-        <InboxOutlined />
-      </p>
-      <p className="ant-upload-text">
-        Click or drag file to this area to upload
-      </p>
-      <p className="ant-upload-hint">
-        Export Orders from Shopify admin console and upload the CSV format file
-        here to generate report.
-      </p>
-    </Dragger>
+      <Button>
+        <UploadOutlined /> Click to Upload
+      </Button>
+    </Upload>
   );
 };
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Table, Space, Button } from "antd";
 
 import { StockReportColumns } from "../utils/Columns";

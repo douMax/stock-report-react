@@ -1,20 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Card, Space, Tabs, Upload, message } from "antd";
+import { Card, Space, Tabs } from "antd";
 import "antd/dist/antd.css";
 import StockReport from "./components/StockReport";
 import GroupBySuburb from "./components/GroupBySuburb";
 
 import UploadToolBar from "./components/UploadToolBar";
-import {
-  readCsvData,
-  exportToCsv,
-  fastConvert,
-} from "./utils/ReadCSVandConvert";
+import { exportToCsv, fastConvert } from "./utils/ReadCSVandConvert";
 import { StockReportColumns } from "./utils/Columns";
-import { InboxOutlined } from "@ant-design/icons";
 
 const { TabPane } = Tabs;
-const { Dragger } = Upload;
 
 const containerStyles = {
   width: "100%",
@@ -43,17 +37,15 @@ const App = () => {
   };
 
   const handleUpload = (info) => {
-    const { status } = info.file;
-    console.log(status);
-
     fastConvert(info.file, setdata);
   };
 
   return (
     <Space direction="vertical" style={containerStyles}>
-      <Card title="NNG Reports">
-        <UploadToolBar onUploadChange={handleUpload} />
-
+      <Card
+        title="NNG Reports"
+        extra={<UploadToolBar onUploadChange={handleUpload} />}
+      >
         <Tabs defaultActiveKey="stocks" onChange={handleTabChange}>
           <TabPane tab="Stocks" key="stocks">
             <StockReport
@@ -63,7 +55,7 @@ const App = () => {
             />
           </TabPane>
           <TabPane tab="Suburbs" key="suburbs">
-            <GroupBySuburb data={data.customersBySub} />
+            <GroupBySuburb orders={data.ordersArray} />
           </TabPane>
         </Tabs>
       </Card>

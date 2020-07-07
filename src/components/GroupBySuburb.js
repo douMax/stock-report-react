@@ -1,38 +1,20 @@
-import React, { useState } from "react";
-import { Divider, Space, Card, Col, Row } from "antd";
+import React from "react";
+import { Col, Row } from "antd";
+import LocationMapContainer from "./Maps/LocationMapContainer";
+import GroupedOrdersList from "./GroupedOrdersList";
 
 const GroupBySuburb = (props) => {
-  const { data } = props;
+  const { orders } = props;
+
   return (
-    <Space direction="vertical" style={{ width: "100%" }}>
-      {data &&
-        Object.keys(data).map((suburb) => {
-          const customers = data[suburb];
-          const qty = customers.length;
-          return (
-            <div>
-              <Divider orientation="left">
-                {customers[0].shipZip} - {suburb}: {qty}
-              </Divider>
-              <Row gutter={16}>
-                {customers &&
-                  customers.map((c) => {
-                    return (
-                      <Col span={6}>
-                        <Card title={`${c.customerName} - ${c.phone}`}>
-                          <p>{c.shipStreet}</p>
-                          <p>
-                            {c.suburb}, {c.shipZip}
-                          </p>
-                        </Card>
-                      </Col>
-                    );
-                  })}
-              </Row>
-            </div>
-          );
-        })}
-    </Space>
+    <Row gutter={8} style={{ width: "100%" }}>
+      <Col span={12}>
+        <GroupedOrdersList orders={orders} />
+      </Col>
+      <Col span={12}>
+        <LocationMapContainer markers={orders} />
+      </Col>
+    </Row>
   );
 };
 
