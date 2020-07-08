@@ -1,10 +1,8 @@
 import React from "react";
 import { List, Avatar, Collapse, Space } from "antd";
 import {
-  StarOutlined,
-  LikeOutlined,
+  PrinterOutlined,
   UnorderedListOutlined,
-  MessageOutlined,
   UserOutlined,
   PhoneOutlined,
 } from "@ant-design/icons";
@@ -21,11 +19,14 @@ const IconText = ({ icon, text }) => (
 
 const GroupedOrdersList = (props) => {
   const { orders } = props;
-  const ordersGrouped = groupBy(orders, "position");
-  Object.keys(ordersGrouped).map((p) => {
-    let ungrouped = ordersGrouped[p];
-    ordersGrouped[p] = groupBy(ungrouped, "postcode");
+  const tempGrouped = groupBy(orders, "postcode");
+  const tempObject = Object.keys(tempGrouped).map((p) => {
+    let position = tempGrouped[p][0].position;
+    let postcode = p;
+    let orders = tempGrouped[p];
+    return { postcode, position, orders };
   });
+  const ordersGrouped = groupBy(tempObject, "position");
   return (
     <div>
       {ordersGrouped &&
@@ -33,8 +34,9 @@ const GroupedOrdersList = (props) => {
           return (
             <Collapse defaultActiveKey={Object.keys(ordersGrouped)}>
               <Panel header={<strong>{position}</strong>} key={position}>
-                {Object.keys(ordersGrouped[position]).map((postcode) => {
-                  const bottomOrders = ordersGrouped[position][postcode];
+                {ordersGrouped[position].map((obj) => {
+                  const { postcode } = obj;
+                  const bottomOrders = obj.orders;
                   const qty = bottomOrders.length;
                   const suburbName = bottomOrders[0].suburb;
                   return (
@@ -50,7 +52,12 @@ const GroupedOrdersList = (props) => {
                             <IconText
                               icon={UnorderedListOutlined}
                               text="Line Items"
-                              key="list-vertical-star-o"
+                              key="list-line-items-o"
+                            />,
+                            <IconText
+                              icon={PrinterOutlined}
+                              text="Packing Slip"
+                              key="list-packing-slip-o"
                             />,
                           ]}
                         >

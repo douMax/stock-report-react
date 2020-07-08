@@ -51,17 +51,25 @@ const getPositionToHome = (home, location) => {
   const radians = Math.atan2(x, y);
   const degree = (radians * 180) / Math.PI;
 
-  if (degree >= -45 && degree < 45) {
+  if (degree > -30 && degree < 30) {
     position = "North";
-  } else if (degree < -45 && degree >= -135) {
+  } else if (degree <= -30 && degree >= -60) {
+    position = "North East";
+  } else if (degree < -60 && degree >= -120) {
     position = "East";
+  } else if (degree < -120 && degree >= -150) {
+    position = "South East";
   } else if (
-    (degree < -135 && degree >= -180) ||
-    (degree <= 180 && degree > 135)
+    (degree < -150 && degree >= -180) ||
+    (degree <= 180 && degree > 150)
   ) {
     position = "South";
-  } else if (degree >= 45 && degree <= 135) {
+  } else if (degree > 120 && degree <= 150) {
+    position = "South West";
+  } else if (degree > 60 && degree <= 120) {
     position = "West";
+  } else if (degree >= 30 && degree <= 60) {
+    position = "North West";
   }
   return position;
 };
