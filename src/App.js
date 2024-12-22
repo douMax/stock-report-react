@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Card, Space, Tabs } from "antd";
 import "antd/dist/antd.css";
-import StockReport from "./components/StockReport";
-import GroupBySuburb from "./components/GroupBySuburb";
 
-import UploadToolBar from "./components/UploadToolBar";
 import { exportToCsv, fastConvert } from "./utils/ReadCSVandConvert";
 import { StockReportColumns } from "./utils/Columns";
 
+import UploadToolBar from "./components/UploadToolBar";
+import StockReport from "./components/StockReport";
+import GroupBySuburb from "./components/GroupBySuburb";
+import PackingSlips from "./components/PackingSlips";
+
+import { Card, Space, Tabs, Empty } from "antd";
 const { TabPane } = Tabs;
 
 const containerStyles = {
@@ -56,6 +58,9 @@ const App = () => {
           </TabPane>
           <TabPane tab="Suburbs" key="suburbs">
             <GroupBySuburb orders={data.ordersArray} />
+          </TabPane>
+          <TabPane tab="Packing Sips">
+            <PackingSlips />
           </TabPane>
         </Tabs>
       </Card>
